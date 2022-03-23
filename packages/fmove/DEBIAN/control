@@ -1,0 +1,6 @@
+Package: fmove
+Version: 0.1
+Maintainer: Il-Guh Nah
+Description: move mouse on idle.
+Depends: python3
+Architecture: all

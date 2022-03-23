@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Name=fmove
+GenericName=fake mouse move
+Comment=move mouse on idle
+Exec=/usr/bin/fmove -d 1 -i 90
+Path=/usr/bin
+Icon=/usr/share/fmove/icons/access.svg
+Terminal=false
+Type=Application
+Categories=Utility
