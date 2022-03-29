@@ -180,7 +180,7 @@ class fmove:
 			self.lock_position2 = self.lock_position
 			self.lock_position = self.mouse.position
 			if self.logging:
-				self.print_log('{}{}, {}'.format('     lock: ',
+				self.print_log('{:>11}{}, {}'.format('lock: ',
 					self.position_to_string(self.lock_position),
 					self.position_to_string(self.lock_position2)))
 			if self.fwindow and self.fwindow.window:
@@ -193,16 +193,16 @@ class fmove:
 		while True:
 			self.cond.acquire()
 			if self.cond.wait(self.interval):
-				self.print_mouse_position(' signaled: ')
+				self.print_mouse_position('signaled: ')
 				if self.term == 0:
 					pass # just move!
 				if self.term == 1:
 					self.cond.release()
 					break
 				elif self.term == 2:
-					self.print_mouse_position('   paused: ')
+					self.print_mouse_position('paused: ')
 					self.cond.wait()
-					self.print_mouse_position('  resumed: ')
+					self.print_mouse_position('resumed: ')
 				elif self.term == 3: # mouse pressed!
 					self.change_lock_position()
 					self.term = 0
@@ -247,7 +247,7 @@ class fmove:
 	def print_mouse_position(self, prefix=''):
 		pos = self.mouse.position
 		if self.logging:
-			self.print_log('{}{}, interval={}, delta={}'.format(
+			self.print_log('{:>11}{}, interval={}, delta={}'.format(
 				prefix, self.position_to_string(pos), self.interval, self.delta))
 		if self.fwindow and self.fwindow.window:
 			self.fwindow.window.event_generate('<<position_changed>>',
