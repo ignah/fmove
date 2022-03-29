@@ -13,6 +13,7 @@ import pynput
 
 import threading
 from datetime import datetime
+from timeit import default_timer as timer
 import argparse
 
 class config:
@@ -187,19 +188,33 @@ class fmove:
 				self.fwindow.window.event_generate('<<lock_position_changed>>',
 					x=self.lock_position[0], y=self.lock_position[1])
 
+	def get_interval(self, start, interval):
+		if self.lock and start > 0.0 and interval > 0.0:
+			interval = interval - (timer() - start)
+			if interval <= 0:
+				interval = 0
+			if interval > self.interval:
+				interval = self.interval
+		else:
+			interval = self.interval
+		return interval
+
 	def keep_mouse_move(self):
 		listener = mlistener(self)
 		listener.start()
-		while True:
+		start = 0.0
+		interval = 0.0
+		while self.term != 1:
 			self.cond.acquire()
-			if self.cond.wait(self.interval):
-				self.print_mouse_position('signaled: ')
-				if self.term == 0:
-					pass # just move!
-				if self.term == 1:
-					self.cond.release()
-					break
-				elif self.term == 2:
+			interval = self.get_interval(start, interval)
+			start = timer()
+			if self.cond.wait(interval):
+				self.print_mouse_position('signaled: ', interval=interval)
+				if self.term == 0: # mouse move detected.
+					pass
+				elif self.term == 1: # terminate this thread!
+					pass
+				elif self.term == 2: # toggled, pause/resume
 					self.print_mouse_position('paused: ')
 					self.cond.wait()
 					self.print_mouse_position('resumed: ')
@@ -207,8 +222,9 @@ class fmove:
 					self.change_lock_position()
 					self.term = 0
 			else:
-				self.print_mouse_position('timeouted: ')
+				self.print_mouse_position('timeouted: ', interval=interval)
 				self.mouse_move()
+				start = 0.0
 			self.cond.release()
 		listener.stop()
 	
@@ -244,11 +260,13 @@ class fmove:
 		else:
 			print('{} {}'.format(self.get_now_timestamp(), message))
 
-	def print_mouse_position(self, prefix=''):
+	def print_mouse_position(self, prefix='', interval=None):
 		pos = self.mouse.position
 		if self.logging:
-			self.print_log('{:>11}{}, interval={}, delta={}'.format(
-				prefix, self.position_to_string(pos), self.interval, self.delta))
+			if not interval:
+				interval = self.interval
+			self.print_log('{:>11}{}, interval={:<.3f}, delta={}'.format(
+				prefix, self.position_to_string(pos), interval, self.delta))
 		if self.fwindow and self.fwindow.window:
 			self.fwindow.window.event_generate('<<position_changed>>',
 					x=pos[0], y=pos[1])
@@ -394,9 +412,19 @@ class fwindow():
 						x=self.fmove.lock_position[0],
 						y=self.fmove.lock_position[1])
 		elif button.bid == 5:
-			self.fmove.interval = float(field.get())
+			interval = float(field.get())
+			if interval > 0:
+				self.fmove.interval = interval
+			else:
+				field.delete(0, 'end')
+				field.insert(0, str(self.fmove.interval))
 		elif button.bid == 6:
-			self.fmove.delta = int(field.get())
+			delta = int(field.get())
+			if delta > 0:
+				self.fmove.delta = delta
+			else:
+				field.delete(0, 'end')
+				field.insert(0, str(self.fmove.delta))
 
 def signal_handler(signum, frame, fmove=None):
 	if signum == signal.SIGINT:
