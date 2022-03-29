@@ -189,11 +189,10 @@ class fmove:
 
 	def keep_mouse_move(self):
 		listener = mlistener(self)
+		listener.start()
 		while True:
-			listener.start()
 			self.cond.acquire()
 			if self.cond.wait(self.interval):
-				listener.stop()
 				self.print_mouse_position(' signaled: ')
 				if self.term == 0:
 					pass # just move!
@@ -208,10 +207,10 @@ class fmove:
 					self.change_lock_position()
 					self.term = 0
 			else:
-				listener.stop()
 				self.print_mouse_position('timeouted: ')
 				self.mouse_move()
 			self.cond.release()
+		listener.stop()
 	
 	def emit_mouse_move(self):
 		self.cond.acquire()
