@@ -1,5 +1,7 @@
 #! /usr/bin/sh
 
+sudo pip3 install python-daemon pynput thread6 datetime timer argparse
+
 user=$USER
 if [ "a$SUDO_USER" != "a" ]; then
 	user=$SUDO_USER
